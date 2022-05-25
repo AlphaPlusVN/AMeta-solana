@@ -76,26 +76,26 @@ pub fn exec<'info>(
     // let authority_seeds = [PREFIX.as_bytes()];
     
     let authority_seeds = [PREFIX.as_bytes(), &[creator_bump]];
-    invoke_signed(
-        &create_metadata_accounts_v2(
-            ctx.accounts.token_metadata_program.key(),
-            ctx.accounts.metadata.key(),
-            ctx.accounts.mint.key(),
-            ctx.accounts.mint_authority.key(),
-            ctx.accounts.payer.key(),
-            ctx.accounts.mint_authority.key(),
-            name,
-            symbol,
-            uri,
-            Some(creators),
-            1,
-            true,
-            false,
-            None,
-            None,
-        ),
-        metadata_infos.as_slice(),
-        &[&authority_seeds],
-    )?;
+    // invoke_signed(
+    //     &create_metadata_accounts_v2(
+    //         ctx.accounts.token_metadata_program.key(),
+    //         ctx.accounts.metadata.key(),
+    //         ctx.accounts.mint.key(),
+    //         ctx.accounts.mint_authority.key(),
+    //         ctx.accounts.payer.key(),
+    //         ctx.accounts.mint_authority.key(),
+    //         name,
+    //         symbol,
+    //         uri,
+    //         Some(creators),
+    //         1,
+    //         true,
+    //         false,
+    //         None,
+    //         None,
+    //     ),
+    //     metadata_infos.as_slice(),
+    //     &[&authority_seeds],
+    // )?;
     Ok(())
 }

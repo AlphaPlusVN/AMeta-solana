@@ -7,6 +7,13 @@ pub use schema::*;
 pub mod intructions;
 pub use intructions::*;
 
+pub mod errors;
+pub use errors::*;
+
+pub mod utils;
+pub use utils::*;
+use crate::errors::ErrorCode;
+
 #[program]
 pub mod ameta {
     use super::*;
@@ -23,16 +30,24 @@ pub mod ameta {
         symbol: String,
         uri: String,
     ) -> Result<()> {
-        buy_box::exec(ctx, creator_bump, name, symbol, uri);
-        Ok(())
+        buy_box::exec(ctx, creator_bump, name, symbol, uri)
+        
+    }
+
+    pub fn open_box(
+        ctx: Context<OpenBox>,
+        creator_bump: u8,
+        fishing_rod_uri: String,
+        fishing_rod_name: String,
+    ) -> Result<()> {        
+        open_box::exec(ctx, creator_bump, fishing_rod_uri, fishing_rod_name)
     }
 
     pub fn initialize_starter_account(
         ctx: Context<InitializeStarterAccount>,
-        user_name: String
-    ) -> Result<()>{
-        initialize_starter_account::exec(ctx, user_name);
-        Ok(())
+        user_name: String,
+    ) -> Result<()> {
+        initialize_starter_account::exec(ctx, user_name)        
     }
 }
 

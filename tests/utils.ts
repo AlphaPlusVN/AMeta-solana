@@ -51,6 +51,11 @@ export const MY_WALLET = web3.Keypair.fromSecretKey(
     JSON.parse(fs.readFileSync(__dirname + '/../keypair5.json').toString())
   )
 )
+export const MY_WALLET2 = web3.Keypair.fromSecretKey(
+  new Uint8Array(
+    JSON.parse(fs.readFileSync(__dirname + '/../keypair6.json').toString())
+  )
+)
 
 export const getStakePool = async (outerProgram: any, outerPDA: web3.PublicKey,) => {
   return await PublicKey.findProgramAddress(
