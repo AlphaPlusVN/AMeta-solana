@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("3wqkqVyxTbpX3wP8KkTKC7ZbfywHQY8hhACpqdnN7hzB");
 pub mod schema;
 pub use schema::*;
 

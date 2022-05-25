@@ -1,14 +1,15 @@
 [features]
 seeds = false
 [programs.localnet]
-ameta = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+ameta = "3wqkqVyxTbpX3wP8KkTKC7ZbfywHQY8hhACpqdnN7hzB"
+
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "localnet"
-wallet = "./keypair5.json"
+wallet = "./ametakeypair.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
