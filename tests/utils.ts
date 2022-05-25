@@ -10,6 +10,12 @@ import {
 import fs from 'fs'
 export const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID =
   new anchor.web3.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+
+
+export const TOKEN_METADATA_PROGRAM_ID = new anchor.web3.PublicKey(
+  'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
+);
+
 const PREFIX = 'a_meta';
 
 
@@ -24,6 +30,7 @@ export const getAtaForMint = async (
 };
 
 
+
 export interface AMetaData {
 
   symbol: string;
@@ -32,7 +39,7 @@ export interface AMetaData {
 }
 
 export const getAMeta = async (outerProgram: any) => {
-    return await PublicKey.findProgramAddress(
+  return await PublicKey.findProgramAddress(
     [Buffer.from(PREFIX)],
     outerProgram.programId
   )
@@ -45,7 +52,7 @@ export const MY_WALLET = web3.Keypair.fromSecretKey(
   )
 )
 
-export const getStakePool = async (outerProgram: any, outerPDA: web3.PublicKey, ) => {
+export const getStakePool = async (outerProgram: any, outerPDA: web3.PublicKey,) => {
   return await PublicKey.findProgramAddress(
     [
       Buffer.from('stakepool'),
@@ -53,6 +60,35 @@ export const getStakePool = async (outerProgram: any, outerPDA: web3.PublicKey, 
       outerProgram.provider.wallet.publicKey.toBuffer(),
     ],
     outerProgram.programId,
-)
+  )
 
+}
+
+export const getMetadata = async (
+  mint: anchor.web3.PublicKey,
+): Promise<anchor.web3.PublicKey> => {
+  return (
+    await anchor.web3.PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+        mint.toBuffer(),
+      ],
+      TOKEN_METADATA_PROGRAM_ID,
+    )
+  )[0];
+};
+
+export const findAssociatedTokenAddress = async(
+  walletAddress: PublicKey,
+  tokenMintAddress: PublicKey
+): Promise<PublicKey> => {
+  return (await PublicKey.findProgramAddress(
+      [
+          walletAddress.toBuffer(),
+          TOKEN_PROGRAM_ID.toBuffer(),
+          tokenMintAddress.toBuffer(),
+      ],
+      SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
+  ))[0];
 }
