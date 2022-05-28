@@ -4,6 +4,8 @@ use crate::PREFIX;
 use anchor_lang::prelude::*;
 use anchor_spl::token;
 use anchor_spl::token::Token;
+
+
 pub struct CreateNftParams<'a> {
     pub payer: Signer<'a>,
     /// CHECK: This is not dangerous because we don't read or write from this account
