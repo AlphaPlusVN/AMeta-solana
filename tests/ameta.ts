@@ -11,11 +11,38 @@ describe("ameta", () => {
 
   const program = anchor.workspace.Ameta as Program<Ameta>;
   const aMetaToken = Keypair.generate();
-  const ownerTokenAccount = Keypair.generate();
+  let ownerTokenAccount : anchor.web3.PublicKey;
   let payer = MY_WALLET;
   before(async () => {
-    await initializeMint(9, aMetaToken, program.provider)
+    ownerTokenAccount = await findAssociatedTokenAddress(MY_WALLET.publicKey, aMetaToken.publicKey);
+    // await initializeMint(9, aMetaToken, program.provider)
+    // let create_owner_token_tx = new Transaction().add(
 
+    //   SystemProgram.createAccount({
+    //     fromPubkey: program.provider.wallet.publicKey,
+    //     newAccountPubkey: ownerTokenAccount.publicKey,
+    //     space: AccountLayout.span,
+    //     lamports: await Token.getMinBalanceRentForExemptAccount(program.provider.connection),
+    //     programId: TOKEN_PROGRAM_ID,
+    //   }),
+    //   // init mint account
+    //   Token.createInitAccountInstruction(
+    //     TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+    //     aMetaToken.publicKey, // mint
+    //     ownerTokenAccount.publicKey, // token account
+    //     payer.publicKey // owner of token account
+    //   ),
+    //   Token.createMintToInstruction(
+    //     TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+    //     aMetaToken.publicKey, // mint
+    //     ownerTokenAccount.publicKey, // receiver (sholud be a token account)
+    //     payer.publicKey, // mint authority
+    //     [], // only multisig account will use. leave it empty now.
+    //     100e9 // amount. if your decimals is 8, you mint 10^8 for 1 token.
+    //   )
+    // );
+
+    // await program.provider.send(create_owner_token_tx, [ownerTokenAccount]);
   })
 
   it('initialize_a_meta', async () => {
@@ -31,11 +58,16 @@ describe("ameta", () => {
     let sig = await program.rpc.initializeGame(outerSpaceData, {
       accounts: {
         aMeta: aMetaPDA,
+        aMetaMint: aMetaToken.publicKey,
+        tokenAccount: ownerTokenAccount,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         authority: MY_WALLET.publicKey,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
 
       },
-      signers: [MY_WALLET],
+      signers: [MY_WALLET, aMetaToken],
 
     })
 
@@ -97,7 +129,6 @@ describe("ameta", () => {
 
     boxVault = await findAssociatedTokenAddress(buyerWallet.publicKey, mint.publicKey);
 
-    // let buyerTokenAccount = await findAssociatedTokenAddress(buyerWallet.publicKey, aMetaToken.publicKey);
 
     let buyerTokenAccount = Keypair.generate();
     let create_buyer_token_tx = new Transaction().add(
@@ -128,44 +159,18 @@ describe("ameta", () => {
 
     await program.provider.send(create_buyer_token_tx, [buyerTokenAccount]);
 
-    console.log("buyerTokenAccount balance: ", await program.provider.connection.getTokenAccountBalance(buyerTokenAccount.publicKey));
-    let create_owner_token_tx = new Transaction().add(
+    console.log("buyerTokenAccount balance: ", (await program.provider.connection.getTokenAccountBalance(buyerTokenAccount.publicKey)).value.uiAmount);
 
-      SystemProgram.createAccount({
-        fromPubkey: program.provider.wallet.publicKey,
-        newAccountPubkey: ownerTokenAccount.publicKey,
-        space: AccountLayout.span,
-        lamports: await Token.getMinBalanceRentForExemptAccount(program.provider.connection),
-        programId: TOKEN_PROGRAM_ID,
-      }),
-      // init mint account
-      Token.createInitAccountInstruction(
-        TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-        aMetaToken.publicKey, // mint
-        ownerTokenAccount.publicKey, // token account
-        payer.publicKey // owner of token account
-      ),
-      Token.createMintToInstruction(
-        TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-        aMetaToken.publicKey, // mint
-        ownerTokenAccount.publicKey, // receiver (sholud be a token account)
-        payer.publicKey, // mint authority
-        [], // only multisig account will use. leave it empty now.
-        100e9 // amount. if your decimals is 8, you mint 10^8 for 1 token.
-      )
-    );
 
-    await program.provider.send(create_owner_token_tx, [ownerTokenAccount]);
-    console.log("ownerTokenAccount balance: ", await program.provider.connection.getTokenAccountBalance(ownerTokenAccount.publicKey));
     await program.rpc.buyBox(bump, 'BOX1', 'STARTER_BOX', {
       accounts: {
         aMeta: aMetaPDA,
         payer: buyerWallet.publicKey,
         boxMint: mint.publicKey,
-        aMetaToken: aMetaToken.publicKey,
+        // aMetaToken: aMetaToken.publicKey,
         // mintAuthority: payer.publicKey,
         buyerTokenAccount: buyerTokenAccount.publicKey,
-        ownerTokenAccount: ownerTokenAccount.publicKey,
+        ownerTokenAccount: ownerTokenAccount,
         vault: boxVault,
         metadata: metadataAddress,
         tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
@@ -176,9 +181,9 @@ describe("ameta", () => {
       }
       , signers: [mint, buyerWallet]
     })
-    console.log("buyerTokenAccount balance: ", await program.provider.connection.getTokenAccountBalance(buyerTokenAccount.publicKey));
-    console.log("ownerTokenAccount balance: ", await program.provider.connection.getTokenAccountBalance(ownerTokenAccount.publicKey));
-    // console.log("token balance: ", await program.provider.connection.getTokenAccountBalance(boxVault));
+    console.log("buyerTokenAccount balance: ", (await program.provider.connection.getTokenAccountBalance(buyerTokenAccount.publicKey)).value.uiAmount);
+    console.log("ownerTokenAccount balance: ", (await program.provider.connection.getTokenAccountBalance(ownerTokenAccount)).value.uiAmount);
+    console.log("token balance: ", (await program.provider.connection.getTokenAccountBalance(boxVault)).value.uiAmount);
   });
 
   let fishingRod = Keypair.generate();

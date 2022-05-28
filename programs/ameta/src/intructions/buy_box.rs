@@ -13,9 +13,8 @@ use solana_program::program::invoke_signed;
 #[derive(Accounts)]
 #[instruction(creator_bump: u8, name: String, box_code: String)]
 pub struct BuyBox<'info> {
-    // #[account(mut)]
-    // pub a_meta: Account<'info, AMeta>,
-    pub a_meta_token: Account<'info, Mint>,
+    #[account(mut)]
+    pub a_meta: Box<Account<'info, AMeta>>,
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(init, payer = payer, mint::decimals = 0, mint::authority = payer, mint::freeze_authority = payer)]
@@ -50,10 +49,9 @@ pub fn exec<'info>(
     box_code: String,
 ) -> Result<()> {
     // let outer_space_creator = &ctx.accounts.outer_space_creator;
-    // let a_meta = &ctx.accounts.a_meta;
+    let a_meta = &ctx.accounts.a_meta;
     let buyer_token_account = &ctx.accounts.buyer_token_account;
     let owner_token_account = &ctx.accounts.owner_token_account;
-    let a_meta_token = &ctx.accounts.a_meta_token;
 
     let mut uri = "".to_string();
     let mut price: u64 = 0;
@@ -63,13 +61,12 @@ pub fn exec<'info>(
     } else {
         return err!(ErrorCode::InvalidBoxCode);
     }
+    msg!("===========MSG=============");
+    msg!(&a_meta.token_account.to_string());
+    msg!(&owner_token_account.key().to_string());
 
-    msg!(&uri);
-    msg!(&price.to_string());
-
-    msg!(&a_meta_token.key().to_string());
-    if buyer_token_account.mint.key() != a_meta_token.key() {
-        return err!(ErrorCode::InvalidTokenAccount);
+    if a_meta.token_account != owner_token_account.key() {
+        return err!(ErrorCode::InvalidOwnerTokenAccount);
     }
 
     if buyer_token_account.amount < price {

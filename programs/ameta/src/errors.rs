@@ -11,6 +11,8 @@ pub enum ErrorCode {
   RentContractNotAvailable,
   #[msg("Invalid token account")]
   InvalidTokenAccount,
+  #[msg("Invalid owner account")]
+  InvalidOwnerTokenAccount,
   
   #[msg("Not enough ameta token")]
   NotEnoughToken,
