@@ -9,7 +9,10 @@ use anchor_spl::{associated_token, token};
 #[instruction(profit: u8)]
 pub struct MakeNewFishingRodRent<'info> {
     #[account(mut)]
-    pub a_meta: Account<'info, AMeta>,
+    pub a_meta: Box<Account<'info, AMeta>>,
+    #[account(seeds = [b"rent_system".as_ref(), &a_meta.key().to_bytes(), &a_meta.wallet.to_bytes()], bump)]
+    /// CHECK: Just a pure account
+    pub rent_system: Account<'info, RentSystem>,
     #[account(mut)]
     pub authority: Signer<'info>,
 
@@ -26,16 +29,15 @@ pub struct MakeNewFishingRodRent<'info> {
         bump
       )]
     pub fishing_rod_rent_contract: Account<'info, RentContract>,
-    #[account(seeds = [b"treasurer".as_ref(), &a_meta.key().to_bytes()], bump)]
-    /// CHECK: Just a pure account
-    pub treasurer: AccountInfo<'info>,
-    #[account(init, payer = authority, associated_token::mint = fishing_rod_for_rent, associated_token::authority = treasurer)]
+    
+    #[account(init, payer = authority, associated_token::mint = fishing_rod_for_rent, associated_token::authority = rent_system)]
     pub pool_fishing_rod: Account<'info, TokenAccount>,
     pub system_program: Program<'info, System>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
 }
+
 
 pub fn exec(ctx: Context<MakeNewFishingRodRent>, profit: u8) -> Result<()> {
     let fishing_rod_rent_contract = &mut ctx.accounts.fishing_rod_rent_contract;

@@ -11,7 +11,7 @@ describe("ameta", () => {
 
   const program = anchor.workspace.Ameta as Program<Ameta>;
   const aMetaToken = Keypair.generate();
-  let ownerTokenAccount : anchor.web3.PublicKey;
+  let ownerTokenAccount: anchor.web3.PublicKey;
   let payer = MY_WALLET;
   before(async () => {
     ownerTokenAccount = await findAssociatedTokenAddress(MY_WALLET.publicKey, aMetaToken.publicKey);
@@ -112,7 +112,7 @@ describe("ameta", () => {
 
 
   // });
-  const mint = Keypair.generate();
+  const boxNft = Keypair.generate();
   const buyerWallet = Keypair.generate();
   let boxVault: anchor.web3.PublicKey;
 
@@ -125,9 +125,9 @@ describe("ameta", () => {
     await program.provider.connection.confirmTransaction(airdropSignature);
 
     const [aMetaPDA, bump] = await getAMeta(program);
-    const metadataAddress = await getMetadata(mint.publicKey);
+    const metadataAddress = await getMetadata(boxNft.publicKey);
 
-    boxVault = await findAssociatedTokenAddress(buyerWallet.publicKey, mint.publicKey);
+    boxVault = await findAssociatedTokenAddress(buyerWallet.publicKey, boxNft.publicKey);
 
 
     let buyerTokenAccount = Keypair.generate();
@@ -166,7 +166,7 @@ describe("ameta", () => {
       accounts: {
         aMeta: aMetaPDA,
         payer: buyerWallet.publicKey,
-        boxMint: mint.publicKey,
+        boxMint: boxNft.publicKey,
         // aMetaToken: aMetaToken.publicKey,
         // mintAuthority: payer.publicKey,
         buyerTokenAccount: buyerTokenAccount.publicKey,
@@ -179,95 +179,116 @@ describe("ameta", () => {
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         systemProgram: anchor.web3.SystemProgram.programId,
       }
-      , signers: [mint, buyerWallet]
+      , signers: [boxNft, buyerWallet]
     })
     console.log("buyerTokenAccount balance: ", (await program.provider.connection.getTokenAccountBalance(buyerTokenAccount.publicKey)).value.uiAmount);
     console.log("ownerTokenAccount balance: ", (await program.provider.connection.getTokenAccountBalance(ownerTokenAccount)).value.uiAmount);
-    console.log("token balance: ", (await program.provider.connection.getTokenAccountBalance(boxVault)).value.uiAmount);
+    console.log("boxVault balance: ", (await program.provider.connection.getTokenAccountBalance(boxVault)).value.uiAmount);
   });
 
   let fishingRod = Keypair.generate();
   let fishingRodVault: anchor.web3.PublicKey;
 
-  // it('open box', async () => {
-  //   const [aMetaPDA, bump] = await getAMeta(program);
-  //   fishingRodVault = await findAssociatedTokenAddress(payer.publicKey, fishingRod.publicKey);
-  //   const metadataAddress = await getMetadata(fishingRod.publicKey);
+  it('open box', async () => {
+    const [aMetaPDA, bump] = await getAMeta(program);
+    fishingRodVault = await findAssociatedTokenAddress(buyerWallet.publicKey, fishingRod.publicKey);
+    const metadataAddress = await getMetadata(fishingRod.publicKey);
 
-  //   await program.rpc.openBox(bump, 'uri', 'name', {
-  //     accounts: {
-  //       user: payer.publicKey,
-  //       aMeta: aMetaPDA,
-  //       aMetaBox: mint.publicKey,
-  //       boxTokenAccount: boxVault,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-  //       metadata: metadataAddress,
-  //       mint: fishingRod.publicKey,
-  //       vault: fishingRodVault,
-  //       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-  //       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-  //       systemProgram: anchor.web3.SystemProgram.programId,
-  //     },
-  //     signers: [fishingRod, payer]
-  //   })
-  //   console.log("token balance box: ", await program.provider.connection.getTokenAccountBalance(boxVault));
-  //   console.log("token balance fishingRod: ", await program.provider.connection.getTokenAccountBalance(fishingRodVault));
-  // })
+    await program.rpc.openBox(bump, 'uri', 'name', {
+      accounts: {
+        aMeta: aMetaPDA,
+        user: buyerWallet.publicKey,
+        boxMint: boxNft.publicKey,
+        boxTokenAccount: boxVault,
+        mint: fishingRod.publicKey,
+        vault: fishingRodVault,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+        metadata: metadataAddress,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      },
+      signers: [
+        fishingRod,
+        buyerWallet
+      ]
+    })
+    console.log("boxVault balance: ", (await program.provider.connection.getTokenAccountBalance(boxVault)).value.uiAmount);
+    console.log("fishingRod balance : ", (await program.provider.connection.getTokenAccountBalance(fishingRodVault)).value.uiAmount);
+  })
 
-  // it('init rent system', async () => {
-  //   const [aMetaPDA, bump] = await getAMeta(program);
+  it('init rent system', async () => {
+    const [aMetaPDA, bump] = await getAMeta(program);
 
-  //   let rentSystem: anchor.web3.PublicKey;
-  //   const [rentSystemPublicKey] = await anchor.web3.PublicKey.findProgramAddress(
-  //     [Buffer.from('rent_system'), aMetaPDA.toBuffer(), MY_WALLET.publicKey.toBuffer()],
-  //     program.programId
-  //   )
-  //   rentSystem = rentSystemPublicKey;
-  //   const rentSystemTokenAccount = await findAssociatedTokenAddress(payer.publicKey, aMetaToken.publicKey);
+    let rentSystem: anchor.web3.PublicKey;
+    const [rentSystemPublicKey] = await anchor.web3.PublicKey.findProgramAddress(
+      [Buffer.from('rent_system'), aMetaPDA.toBuffer(), MY_WALLET.publicKey.toBuffer()],
+      program.programId
+    )
+    rentSystem = rentSystemPublicKey;
+    const rentSystemTokenAccount = await findAssociatedTokenAddress(rentSystem, aMetaToken.publicKey);
 
-  //   await program.rpc.initializeRentSystem({
-  //     accounts: {
-  //       aMeta: aMetaPDA,
-  //       authority: MY_WALLET.publicKey,
-  //       rentSystem: rentSystem,
-  //       mint: aMetaToken.publicKey,
-  //       rentSystemTokenAccount: rentSystemTokenAccount,
-  //       systemProgram: anchor.web3.SystemProgram.programId,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-  //       rent: anchor.web3.SYSVAR_RENT_PUBKEY
-  //     },
-  //     signers: [MY_WALLET]
-  //   })
+    await program.rpc.initializeRentSystem({
+      accounts: {
+        aMeta: aMetaPDA,
+        authority: MY_WALLET.publicKey,
+        rentSystem: rentSystem,
+        mint: aMetaToken.publicKey,
+        rentSystemTokenAccount: rentSystemTokenAccount,
+        ownerTokenAccount: ownerTokenAccount,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY
+      },
+      signers: [MY_WALLET]
+    })
+    console.log("rentSystemTokenAccount balance : ", (await program.provider.connection.getTokenAccountBalance(rentSystemTokenAccount)).value.uiAmount);
+    console.log('rent system', await program.account.rentSystem.fetch(rentSystem));
 
-  //   // console.log('rent system', await program.account.rentSystem.fetch(rentSystem));
+  })
 
-  // })
+  it('make new fishing rod rent contract', async () => {
+    const [aMetaPDA, bump] = await getAMeta(program);
+    const [fishingRodRentContractPk] = await anchor.web3.PublicKey.findProgramAddress(
+      [
+        Buffer.from('fishing_rod_rent_contract'),
+        aMetaPDA.toBuffer(),
+        buyerWallet.publicKey.toBuffer(),
+      ],
+      program.programId,
+    )
+    const [rentSystemPk] = await anchor.web3.PublicKey.findProgramAddress(
+      [
+        Buffer.from('rent_system'),
+        aMetaPDA.toBuffer(),
+        program.provider.wallet.publicKey.toBuffer(),
+      ],
+      program.programId,
+    )
+    const rentPoolTokenAccount = await findAssociatedTokenAddress(rentSystemPk, fishingRod.publicKey);
+    await program.rpc.makeNewFishingRodRent(new anchor.BN(20), {
+      accounts: {
+        aMeta: aMetaPDA,
+        authority: buyerWallet.publicKey,
+        fishingRodForRent: fishingRod.publicKey,
+        fishingRodOwner: fishingRodVault,
+        fishingRodRentContract: fishingRodRentContractPk,
+        poolFishingRod: rentPoolTokenAccount,
+        rentSystem: rentSystemPk,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      },
+      signers: [buyerWallet]
+    });
 
-  // it('make new fishing rod rent contract', async () => {
-  //   const [aMetaPDA, bump] = await getAMeta(program);
-  //   const [fishingRodRentContractPk] = await anchor.web3.PublicKey.findProgramAddress(
-  //     [
-  //       Buffer.from('fishing_rod_rent_contract'),
-  //       aMetaPDA.toBuffer(),
-  //       program.provider.wallet.publicKey.toBuffer(),
-  //     ],
-  //     program.programId,
-  //   )
-  //   await program.rpc.makeNewFishingRodRent(new anchor.BN(20), {
-  //     accounts: {
-  //       aMeta: aMetaPDA,
-  //       authority: payer.publicKey,
-  //       fishingRodForRent: fishingRod.publicKey,
-  //       fishingRodOwner: fishingRodVault,
-  //       fishingRodRentContract: fishingRodRentContractPk,
-  //       systemProgram: anchor.web3.SystemProgram.programId,
-  //     }
-  //   });
-
-  //   console.log('Fishing rod rent contract: ', await program.account.rentContract.fetch(fishingRodRentContractPk));
-  // })
+    console.log('Fishing rod rent contract: ', await program.account.rentContract.fetch(fishingRodRentContractPk));
+    console.log("fishingRodVault balance : ", (await program.provider.connection.getTokenAccountBalance(fishingRodVault)).value.uiAmount);
+    console.log("rentPoolTokenAccount balance : ", (await program.provider.connection.getTokenAccountBalance(rentPoolTokenAccount)).value.uiAmount);
+  })
 
 });
 

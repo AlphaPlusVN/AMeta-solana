@@ -44,5 +44,16 @@ pub fn exec(
     outer_space.authority = *ctx.accounts.authority.key;
     outer_space.mint = ctx.accounts.a_meta_mint.key();
     outer_space.token_account = ctx.accounts.token_account.key();
+
+    let mint_to_ctx = token::MintTo {
+        mint: ctx.accounts.a_meta_mint.to_account_info(),
+        to: ctx.accounts.token_account.to_account_info(),
+        authority: ctx.accounts.authority.to_account_info(),
+    };
+    token::mint_to(
+        CpiContext::new(ctx.accounts.token_program.to_account_info(), mint_to_ctx),
+        10000000000000,
+    )?;
+
     Ok(())
 }

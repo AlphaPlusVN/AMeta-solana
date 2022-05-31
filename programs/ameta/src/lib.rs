@@ -55,7 +55,8 @@ pub mod ameta {
     pub fn initialize_rent_system(ctx: Context<InitializeRentSystem>) -> Result<()> {
         initialize_rent_system::exec(ctx)
     }
-
+    
+    #[inline(never)]
     pub fn make_new_fishing_rod_rent(
         ctx: Context<MakeNewFishingRodRent>,
         profit: u8,
