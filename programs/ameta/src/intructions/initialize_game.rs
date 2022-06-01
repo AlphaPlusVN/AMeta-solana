@@ -38,12 +38,12 @@ pub fn exec(
     ctx: Context<InitializeAMeta>,
     data: AMetaData,
 ) -> Result<()> {
-    let outer_space = &mut ctx.accounts.a_meta;
-    outer_space.data = data;
-    outer_space.wallet = *ctx.accounts.authority.key;
-    outer_space.authority = *ctx.accounts.authority.key;
-    outer_space.mint = ctx.accounts.a_meta_mint.key();
-    outer_space.token_account = ctx.accounts.token_account.key();
+    let a_meta = &mut ctx.accounts.a_meta;
+    a_meta.data = data;
+    a_meta.wallet = *ctx.accounts.authority.key;
+    a_meta.authority = *ctx.accounts.authority.key;
+    a_meta.mint = ctx.accounts.a_meta_mint.key();
+    a_meta.token_account = ctx.accounts.token_account.key();
 
     let mint_to_ctx = token::MintTo {
         mint: ctx.accounts.a_meta_mint.to_account_info(),

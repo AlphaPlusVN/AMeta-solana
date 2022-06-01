@@ -73,28 +73,30 @@ describe("ameta", () => {
 
     console.log("aMetaPDA ==========", await program.account.aMeta.fetch(aMetaPDA));
   });
-  // it('update ameta', async () => {
-  //   // return;
-  //   let outerSpaceData: AMetaData = {
-  //     price: new anchor.BN(1),
-  //     symbol: 'AMCCCC',
-  //   };
-  //   let payerWallet = program.provider.wallet;
+  it('update ameta', async () => {
+    // return;
+    let outerSpaceData: AMetaData = {
+      price: new anchor.BN(1),
+      symbol: 'AMCCCC',
+    };
+    let payerWallet = program.provider.wallet;
 
-  //   const [aMetaPDA, bump] = await getAMeta(program);
+    const [aMetaPDA, bump] = await getAMeta(program);
 
-  //   let sig = await program.rpc.updateGame(outerSpaceData, {
-  //     accounts: {
-  //       aMeta: aMetaPDA,
-  //       authority: MY_WALLET.publicKey,
-  //       systemProgram: SystemProgram.programId,
-  //     },
-  //     signers: [MY_WALLET],
+    let sig = await program.rpc.updateGame(outerSpaceData, {
+      accounts: {
+        aMeta: aMetaPDA,
+        authority: MY_WALLET.publicKey,
+        tokenAccount: ownerTokenAccount,
+        aMetaMint: aMetaToken.publicKey,
+        systemProgram: SystemProgram.programId,
+      },
+      signers: [MY_WALLET],
 
-  //   })
+    })
 
-  //   console.log("aMetaPDA ==========", await program.account.aMeta.fetch(aMetaPDA));
-  // });
+    console.log("aMetaPDA ==========", await program.account.aMeta.fetch(aMetaPDA));
+  });
 
   // it('create starter account', async () => {
   //   const [aMetaPDA, bump] = await getAMeta(program);
@@ -115,6 +117,7 @@ describe("ameta", () => {
   const boxNft = Keypair.generate();
   const buyerWallet = Keypair.generate();
   let boxVault: anchor.web3.PublicKey;
+  return true;
 
   it('Buy box', async () => {
     const airdropSignature = await program.provider.connection.requestAirdrop(
