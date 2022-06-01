@@ -1,6 +1,6 @@
 [features]
 seeds = false
-[programs.localnet]
+[programs.devnet]
 ameta = "3wqkqVyxTbpX3wP8KkTKC7ZbfywHQY8hhACpqdnN7hzB"
 
 
@@ -8,7 +8,7 @@ ameta = "3wqkqVyxTbpX3wP8KkTKC7ZbfywHQY8hhACpqdnN7hzB"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "./ametakeypair.json"
 
 [scripts]
