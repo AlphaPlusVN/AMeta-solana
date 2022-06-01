@@ -127,7 +127,7 @@ describe("ameta", () => {
 
     await program.provider.connection.confirmTransaction(airdropSignature);
 
-    const [aMetaPDA, bump] = await getAMeta(program);
+    
     const metadataAddress = await getMetadata(boxNft.publicKey);
 
     boxVault = await findAssociatedTokenAddress(buyerWallet.publicKey, boxNft.publicKey);
