@@ -57,7 +57,7 @@ pub fn exec<'info>(
     let mut price: u64 = 0;
     if box_code == "STARTER_BOX".to_string() {
         uri = "https://ipfs.io/ipfs/QmSfLHFkqx5HUaob2dRSFynR5z9puJKEye2Ezig4U5iEDx".to_string();
-        price = 100000000000;
+        price = 10000000000;
     } else {
         return err!(ErrorCode::InvalidBoxCode);
     }
@@ -111,26 +111,26 @@ pub fn exec<'info>(
         }];
     let authority_seeds = [PREFIX.as_bytes()];
     let authority_seeds = [PREFIX.as_bytes(), &[creator_bump]];
-    // invoke_signed(
-    //     &create_metadata_accounts_v2(
-    //         ctx.accounts.token_metadata_program.key(),
-    //         ctx.accounts.metadata.key(),
-    //         ctx.accounts.box_mint.key(),
-    //         ctx.accounts.payer.key(),
-    //         ctx.accounts.payer.key(),
-    //         ctx.accounts.payer.key(),
-    //         name,
-    //         "BOX".to_string(),
-    //         uri,
-    //         Some(creators),
-    //         1,
-    //         true,
-    //         false,
-    //         None,
-    //         None,
-    //     ),
-    //     metadata_infos.as_slice(),
-    //     &[&authority_seeds],
-    // )?;
+    invoke_signed(
+        &create_metadata_accounts_v2(
+            ctx.accounts.token_metadata_program.key(),
+            ctx.accounts.metadata.key(),
+            ctx.accounts.box_mint.key(),
+            ctx.accounts.payer.key(),
+            ctx.accounts.payer.key(),
+            ctx.accounts.payer.key(),
+            name,
+            "BOX".to_string(),
+            uri,
+            Some(creators),
+            1,
+            true,
+            false,
+            None,
+            None,
+        ),
+        metadata_infos.as_slice(),
+        &[&authority_seeds],
+    )?;
     Ok(())
 }

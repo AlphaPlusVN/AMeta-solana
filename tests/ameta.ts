@@ -117,7 +117,7 @@ describe("ameta", () => {
   const boxNft = Keypair.generate();
   const buyerWallet = Keypair.generate();
   let boxVault: anchor.web3.PublicKey;
-  return true;
+  
 
   it('Buy box', async () => {
     const airdropSignature = await program.provider.connection.requestAirdrop(
