@@ -117,7 +117,7 @@ describe("ameta", () => {
   const boxNft = Keypair.generate();
   const buyerWallet = Keypair.generate();
   let boxVault: anchor.web3.PublicKey;
-  return true;
+
 
   it('Buy box', async () => {
     const airdropSignature = await program.provider.connection.requestAirdrop(
@@ -188,7 +188,7 @@ describe("ameta", () => {
     console.log("ownerTokenAccount balance: ", (await program.provider.connection.getTokenAccountBalance(ownerTokenAccount)).value.uiAmount);
     console.log("boxVault balance: ", (await program.provider.connection.getTokenAccountBalance(boxVault)).value.uiAmount);
   });
-
+  return true;
   let fishingRod = Keypair.generate();
   let fishingRodVault: anchor.web3.PublicKey;
 

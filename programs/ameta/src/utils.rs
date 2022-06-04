@@ -74,26 +74,26 @@ pub fn create_nft(params: CreateNftParams<'_>) -> Result<()> {
         }];
     // let authority_seeds = [PREFIX.as_bytes()];
     let authority_seeds = [PREFIX.as_bytes(), &[creator_bump]];
-    // invoke_signed(
-    //     &create_metadata_accounts_v2(
-    //         token_metadata_program.key(),
-    //         metadata.key(),
-    //         mint.key(),
-    //         mint_authority.key(),
-    //         payer.key(),
-    //         mint_authority.key(),
-    //         name,
-    //         symbol,
-    //         uri,
-    //         Some(creators),
-    //         1,
-    //         true,
-    //         false,
-    //         None,
-    //         None,
-    //     ),
-    //     metadata_infos.as_slice(),
-    //     &[&authority_seeds],
-    // )?;
+    invoke_signed(
+        &create_metadata_accounts_v2(
+            token_metadata_program.key(),
+            metadata.key(),
+            mint.key(),
+            mint_authority.key(),
+            payer.key(),
+            mint_authority.key(),
+            name,
+            symbol,
+            uri,
+            Some(creators),
+            1,
+            true,
+            false,
+            None,
+            None,
+        ),
+        metadata_infos.as_slice(),
+        &[&authority_seeds],
+    )?;
     Ok(())
 }
