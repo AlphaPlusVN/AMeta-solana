@@ -73,7 +73,7 @@ pub fn exec(
         CpiContext::new(ctx.accounts.token_program.to_account_info(), burn_ctx),
         1,
     )?;
-    let symbol = "FISHING_ROD".to_string();
+    let symbol = "F_ROD".to_string();
 
     create_nft(CreateNftParams{
         payer: user.clone(),
