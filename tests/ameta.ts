@@ -120,59 +120,24 @@ describe("ameta", () => {
   
 
   it('Buy box', async () => {
-    const airdropSignature = await program.provider.connection.requestAirdrop(
-      buyerWallet.publicKey,
-      LAMPORTS_PER_SOL,
-    );
 
-    await program.provider.connection.confirmTransaction(airdropSignature);
+
+
 
     
     const metadataAddress = await getMetadata(boxNft.publicKey);
 
-    boxVault = await findAssociatedTokenAddress(buyerWallet.publicKey, boxNft.publicKey);
-
-
-    let buyerTokenAccount = Keypair.generate();
-    let create_buyer_token_tx = new Transaction().add(
-
-      SystemProgram.createAccount({
-        fromPubkey: program.provider.wallet.publicKey,
-        newAccountPubkey: buyerTokenAccount.publicKey,
-        space: AccountLayout.span,
-        lamports: await Token.getMinBalanceRentForExemptAccount(program.provider.connection),
-        programId: TOKEN_PROGRAM_ID,
-      }),
-      // init mint account
-      Token.createInitAccountInstruction(
-        TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-        aMetaToken.publicKey, // mint
-        buyerTokenAccount.publicKey, // token account
-        buyerWallet.publicKey // owner of token account
-      ),
-      Token.createMintToInstruction(
-        TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
-        aMetaToken.publicKey, // mint
-        buyerTokenAccount.publicKey, // receiver (sholud be a token account)
-        payer.publicKey, // mint authority
-        [], // only multisig account will use. leave it empty now.
-        150e9 // amount. if your decimals is 8, you mint 10^8 for 1 token.
-      )
-    );
-
-    await program.provider.send(create_buyer_token_tx, [buyerTokenAccount]);
-
-    console.log("buyerTokenAccount balance: ", (await program.provider.connection.getTokenAccountBalance(buyerTokenAccount.publicKey)).value.uiAmount);
+    boxVault = await findAssociatedTokenAddress(payer.publicKey, boxNft.publicKey);
 
 
     await program.rpc.buyBox(bump, 'BOX1', 'STARTER_BOX', {
       accounts: {
         aMeta: aMetaPDA,
-        payer: buyerWallet.publicKey,
+        payer: payer.publicKey,
         boxMint: boxNft.publicKey,
         // aMetaToken: aMetaToken.publicKey,
         // mintAuthority: payer.publicKey,
-        buyerTokenAccount: buyerTokenAccount.publicKey,
+        buyerTokenAccount: ownerTokenAccount,
         ownerTokenAccount: ownerTokenAccount,
         vault: boxVault,
         metadata: metadataAddress,
@@ -182,29 +147,53 @@ describe("ameta", () => {
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         systemProgram: anchor.web3.SystemProgram.programId,
       }
-      , signers: [boxNft, buyerWallet]
+      , signers: [boxNft, payer]
     })
-    console.log("buyerTokenAccount balance: ", (await program.provider.connection.getTokenAccountBalance(buyerTokenAccount.publicKey)).value.uiAmount);
-    console.log("ownerTokenAccount balance: ", (await program.provider.connection.getTokenAccountBalance(ownerTokenAccount)).value.uiAmount);
+
     console.log("boxVault balance: ", (await program.provider.connection.getTokenAccountBalance(boxVault)).value.uiAmount);
   });
 
   let fishingRod = Keypair.generate();
-  let fishingRodVault: anchor.web3.PublicKey;
+  let ownerVault: anchor.web3.PublicKey;
 
   it('open box', async () => {
     const [aMetaPDA, bump] = await getAMeta(program);
-    fishingRodVault = await findAssociatedTokenAddress(buyerWallet.publicKey, fishingRod.publicKey);
+    ownerVault = await findAssociatedTokenAddress(payer.publicKey, fishingRod.publicKey);
     const metadataAddress = await getMetadata(fishingRod.publicKey);
+    let buyerVault = Keypair.generate();
+    await initializeMint(0, fishingRod, program.provider)
+    let create_buyer_token_tx = new Transaction().add(
 
+      SystemProgram.createAccount({
+        fromPubkey: program.provider.wallet.publicKey,
+        newAccountPubkey: buyerVault.publicKey,
+        space: AccountLayout.span,
+        lamports: await Token.getMinBalanceRentForExemptAccount(program.provider.connection),
+        programId: TOKEN_PROGRAM_ID,
+      }),
+      // init mint account
+      Token.createInitAccountInstruction(
+        TOKEN_PROGRAM_ID, // always TOKEN_PROGRAM_ID
+        fishingRod.publicKey, // mint
+        buyerVault.publicKey, // token account
+        buyerWallet.publicKey // owner of token account
+      ),
+
+    );
+
+    await program.provider.send(create_buyer_token_tx, [buyerVault]);
+
+    console.log("buyerVault balance: ", (await program.provider.connection.getTokenAccountBalance(buyerVault.publicKey)).value.uiAmount);
+    
     await program.rpc.openBox(bump, 'uri', 'name', {
       accounts: {
         aMeta: aMetaPDA,
-        user: buyerWallet.publicKey,
+        owner: payer.publicKey,
+        buyerVault: buyerVault.publicKey,
         boxMint: boxNft.publicKey,
         boxTokenAccount: boxVault,
-        mint: fishingRod.publicKey,
-        vault: fishingRodVault,
+        fishingRodMint: fishingRod.publicKey,
+        ownerVault: ownerVault,
         tokenProgram: TOKEN_PROGRAM_ID,
         tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
         metadata: metadataAddress,
@@ -213,14 +202,15 @@ describe("ameta", () => {
         systemProgram: anchor.web3.SystemProgram.programId,
       },
       signers: [
-        fishingRod,
-        buyerWallet
+        // fishingRod,
+        payer
       ]
     })
     console.log("boxVault balance: ", (await program.provider.connection.getTokenAccountBalance(boxVault)).value.uiAmount);
-    console.log("fishingRod balance : ", (await program.provider.connection.getTokenAccountBalance(fishingRodVault)).value.uiAmount);
+    console.log("fishingRod balance : ", (await program.provider.connection.getTokenAccountBalance(ownerVault)).value.uiAmount);
+    console.log("buyerVault balance: ", (await program.provider.connection.getTokenAccountBalance(buyerVault.publicKey)).value.uiAmount);
   })
-
+  return true;
   it('init rent system', async () => {
     const [aMetaPDA, bump] = await getAMeta(program);
 
@@ -276,7 +266,7 @@ describe("ameta", () => {
         aMeta: aMetaPDA,
         authority: buyerWallet.publicKey,
         fishingRodForRent: fishingRod.publicKey,
-        fishingRodOwner: fishingRodVault,
+        fishingRodOwner: ownerVault,
         fishingRodRentContract: fishingRodRentContractPk,
         poolFishingRod: rentPoolTokenAccount,
         rentSystem: rentSystemPk,
@@ -289,7 +279,7 @@ describe("ameta", () => {
     });
 
     console.log('Fishing rod rent contract: ', await program.account.rentContract.fetch(fishingRodRentContractPk));
-    console.log("fishingRodVault balance : ", (await program.provider.connection.getTokenAccountBalance(fishingRodVault)).value.uiAmount);
+    console.log("fishingRodVault balance : ", (await program.provider.connection.getTokenAccountBalance(ownerVault)).value.uiAmount);
     console.log("rentPoolTokenAccount balance : ", (await program.provider.connection.getTokenAccountBalance(rentPoolTokenAccount)).value.uiAmount);
   })
 
