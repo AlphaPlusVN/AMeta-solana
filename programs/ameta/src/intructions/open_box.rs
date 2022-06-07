@@ -17,18 +17,19 @@ pub struct OpenBox<'info> {
     #[account(mut)]
     pub a_meta: Account<'info, AMeta>,
     #[account(mut)]
-    pub user: Signer<'info>,
-    
+    pub owner: Signer<'info>,
+    /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut)]
     pub box_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub box_token_account: Account<'info, TokenAccount>,
-    #[account(init, payer = user, mint::decimals = 0, mint::authority = user, mint::freeze_authority = user)]
-    pub mint: Account<'info, Mint>,
-    
-    #[account(init, payer = user, associated_token::mint = mint, associated_token::authority = user)]
-    pub vault: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub fishing_rod_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub buyer_vault: Box<Account<'info, TokenAccount>>,
 
+    #[account(init, payer = owner, associated_token::mint = fishing_rod_mint, associated_token::authority = owner)]
+    pub owner_vault: Account<'info, TokenAccount>,
     /// CHECK: This is not dangerous because we don't read or write from this account
     #[account(mut)]
     metadata: UncheckedAccount<'info>,
@@ -47,11 +48,12 @@ pub fn exec(
     fishing_rod_uri: String,
     fishing_rod_name: String,
 ) -> Result<()> {
-    let user = &ctx.accounts.user;
+    let owner = &ctx.accounts.owner;
     let box_mint = &ctx.accounts.box_mint;
     let box_token_account = &ctx.accounts.box_token_account;
+    let fishing_rod_mint = &ctx.accounts.fishing_rod_mint;
     // Check the owner of token account
-    if box_token_account.owner != user.key() {
+    if box_token_account.owner != owner.key() {
         return err!(ErrorCode::NotOwnerNFT);
     }
     //Check Box on the token account
@@ -64,10 +66,13 @@ pub fn exec(
         return err!(ErrorCode::NotOwnerNFT);
     }
 
+    if fishing_rod_mint.decimals != 0 {
+        return err!(ErrorCode::InvalidMint);
+    }
     let burn_ctx = token::Burn {
         mint: ctx.accounts.box_mint.to_account_info(),
         from: ctx.accounts.box_token_account.to_account_info(),
-        authority: ctx.accounts.user.to_account_info(),
+        authority: ctx.accounts.owner.to_account_info(),
     };
     token::burn(
         CpiContext::new(ctx.accounts.token_program.to_account_info(), burn_ctx),
@@ -75,20 +80,31 @@ pub fn exec(
     )?;
     let symbol = "FISHING_ROD".to_string();
 
-    create_nft(CreateNftParams{
-        payer: user.clone(),
+    create_nft(CreateNftParams {
+        payer: owner.clone(),
         metadata: ctx.accounts.metadata.to_account_info(),
-        mint: ctx.accounts.mint.to_account_info(),
-        mint_authority: ctx.accounts.user.clone(),
-        vault: ctx.accounts.vault.to_account_info(),
+        mint: ctx.accounts.fishing_rod_mint.to_account_info(),
+        mint_authority: ctx.accounts.owner.clone(),
+        vault: ctx.accounts.owner_vault.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
-        token_metadata_program:  ctx.accounts.token_metadata_program.to_account_info(),
-        rent:ctx.accounts.rent.clone(),
+        token_metadata_program: ctx.accounts.token_metadata_program.to_account_info(),
+        rent: ctx.accounts.rent.clone(),
         system_program: ctx.accounts.system_program.clone(),
         creator_bump: creator_bump,
         name: fishing_rod_name,
         symbol: symbol,
         uri: fishing_rod_uri,
     })?;
+
+    let transfer_ctx = token::Transfer {
+        from: ctx.accounts.owner_vault.to_account_info(),
+        to: ctx.accounts.buyer_vault.to_account_info(),
+        authority: ctx.accounts.owner.to_account_info(),
+    };
+    token::transfer(
+        CpiContext::new(ctx.accounts.token_program.to_account_info(), transfer_ctx),
+        1,
+    )?;
+
     Ok(())
 }

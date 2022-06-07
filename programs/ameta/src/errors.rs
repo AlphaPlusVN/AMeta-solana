@@ -16,5 +16,7 @@ pub enum ErrorCode {
   
   #[msg("Not enough ameta token")]
   NotEnoughToken,
+  #[msg("Invalid mint")]
+  InvalidMint,
   
 }
